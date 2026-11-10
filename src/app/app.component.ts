@@ -1,0 +1,13 @@
+﻿import { Component, inject } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from './shared/header.component';
+
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet, HeaderComponent],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css'
+})
+export class App {
+  readonly appName = 'Huellas Dulces';
+}
