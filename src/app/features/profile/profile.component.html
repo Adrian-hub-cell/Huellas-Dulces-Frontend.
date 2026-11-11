@@ -1,0 +1,100 @@
+<section class="profile-page">
+  <a routerLink="/" class="profile-back">← Volver al catálogo</a>
+
+  <header class="profile-heading">
+    <span class="profile-eyebrow">HUELLAS DULCES</span>
+    <h1>Mi perfil</h1>
+    <p>Administra tus datos personales y tu fotografía de perfil.</p>
+  </header>
+
+  @if (loading()) {
+    <div class="profile-status">Cargando tu perfil...</div>
+  } @else {
+    <div class="profile-layout">
+      <section class="profile-card avatar-card">
+        <div class="avatar-preview">
+          @if (avatarUrl()) {
+            <img [src]="avatarUrl()" alt="Fotografía de perfil">
+          } @else {
+            <span class="avatar-placeholder">🐾</span>
+          }
+        </div>
+
+        <h2>{{ profile()?.displayName || profile()?.username }}</h2>
+        <p class="profile-username">&#64;{{ profile()?.username }}</p>
+
+        <label class="avatar-upload">
+          {{ uploading() ? 'Procesando fotografía...' : 'Cambiar fotografía' }}
+          <input
+            type="file"
+            accept="image/*"
+            [disabled]="uploading()"
+            (change)="onAvatarSelected($event)">
+        </label>
+
+        @if (profile()?.hasAvatar) {
+          <button
+            type="button"
+            class="avatar-delete"
+            [disabled]="deletingAvatar()"
+            (click)="removeAvatar()">
+            {{ deletingAvatar() ? 'Eliminando...' : 'Eliminar fotografía' }}
+          </button>
+        }
+
+        <small class="avatar-help">
+          Se convierte a WebP, máximo 512 × 512 píxeles y 1 MB.
+        </small>
+      </section>
+
+      <section class="profile-card profile-form-card">
+        <div class="profile-form-heading">
+          <h2>Información personal</h2>
+          <p>Tu nombre de usuario no se puede modificar desde esta pantalla.</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="saveProfile()">
+          <label>
+            Nombre para mostrar
+            <input formControlName="displayName" maxlength="150"
+              placeholder="¿Cómo quieres que te llamemos?">
+          </label>
+
+          <label>
+            Correo electrónico
+            <input type="email" formControlName="email" maxlength="150"
+              placeholder="correo@ejemplo.com">
+            @if (form.controls.email.touched && form.controls.email.invalid) {
+              <small class="profile-field-error">Escribe un correo válido.</small>
+            }
+          </label>
+
+          <label>
+            Teléfono
+            <input type="tel" formControlName="phone" maxlength="30"
+              placeholder="Tu número de contacto">
+          </label>
+
+          <label>
+            Dirección
+            <textarea formControlName="address" maxlength="255" rows="3"
+              placeholder="Tu dirección"></textarea>
+          </label>
+
+          @if (message()) {
+            <p class="profile-success" role="status">{{ message() }}</p>
+          }
+
+          @if (errorMessage()) {
+            <p class="profile-error" role="alert">{{ errorMessage() }}</p>
+          }
+
+          <button class="profile-save" type="submit"
+            [disabled]="saving()">
+            {{ saving() ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </form>
+      </section>
+    </div>
+  }
+</section>

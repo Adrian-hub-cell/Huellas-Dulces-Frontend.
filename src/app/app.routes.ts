@@ -1,4 +1,6 @@
-﻿import { Routes } from '@angular/router';
+
+import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -17,9 +19,23 @@ export const routes: Routes = [
       .then(m => m.ProductRegisterComponent)
   },
   {
+    path: 'crear-cuenta',
+    loadComponent: () => import('./features/auth/customer-register.component')
+      .then(m => m.CustomerRegisterComponent)
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/login.component')
       .then(m => m.LoginComponent)
   },
-  { path: '**', redirectTo: '' }
+  {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/profile/profile.component')
+      .then(m => m.ProfileComponent)
+  },
+  {
+    path: '**',
+    redirectTo: ''
+  }
 ];

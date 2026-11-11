@@ -1,6 +1,9 @@
-﻿
+
 
 import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Product } from '../../models/product.model';
@@ -256,6 +259,10 @@ interface CategoryCard {
           </div>
         }
 
+        @if (productService.searching()) {
+          <p class="empty-state" aria-live="polite">Actualizando resultados...</p>
+        }
+
         @if (productService.loading()) {
           <p class="empty-state">Cargando productos...</p>
         } @else {
@@ -343,24 +350,39 @@ export class ProductListComponent {
     }
   ];
 
+  private readonly searchTerms = new Subject<string>();
+
   readonly filteredProducts = computed(() => {
-    const term = this.searchInput().trim().toLocaleLowerCase();
+    const term = this.searchInput().trim();
     const category = this.selectedCategory();
 
-    return this.productService.products().filter(product => {
-      const text = [
-        product.name,
-        product.description,
-        product.category
-      ].join(' ').toLocaleLowerCase();
+    // Si hay búsqueda, se muestran los resultados del servidor o de la caché.
+    const source = term
+      ? (this.productService.searchResults() ?? [])
+      : this.productService.products();
 
-      return text.includes(term) &&
-        this.matchesCategory(product, category);
-    });
+    return source.filter(product =>
+      this.matchesCategory(product, category)
+    );
   });
 
   constructor() {
     this.productService.loadProducts();
+
+    // Búsqueda reactiva: espera 300 ms y cancela consultas anteriores.
+    this.searchTerms.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        if (!term) {
+          this.productService.clearSearch();
+          return of([]);
+        }
+
+        return this.productService.searchProducts(term);
+      }),
+      takeUntilDestroyed()
+    ).subscribe();
   }
 
   private matchesCategory(product: Product, category: string): boolean {
@@ -389,6 +411,8 @@ export class ProductListComponent {
   selectCategory(category: CategoryKey): void {
     this.selectedCategory.set(category);
     this.searchInput.set('');
+    this.productService.clearSearch();
+    this.searchTerms.next('');
     this.currentView.set('catalog');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -396,6 +420,8 @@ export class ProductListComponent {
   showAllProducts(): void {
     this.selectedCategory.set('Todas');
     this.searchInput.set('');
+    this.productService.clearSearch();
+    this.searchTerms.next('');
     this.currentView.set('catalog');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -409,6 +435,8 @@ export class ProductListComponent {
     this.currentView.set('home');
     this.selectedCategory.set('Todas');
     this.searchInput.set('');
+    this.productService.clearSearch();
+    this.searchTerms.next('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -429,11 +457,25 @@ export class ProductListComponent {
 
   updateSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.searchInput.set(input.value);
+    const term = input.value;
+
+    this.searchInput.set(term);
+
+    if (!term.trim()) {
+      this.productService.clearSearch();
+    } else {
+      // Mostrar primero la caché disponible mientras llega la respuesta nueva.
+      const cached = this.productService.getCachedSearch(term);
+      this.productService.searchResults.set(cached ?? []);
+    }
+
+    this.searchTerms.next(term.trim());
   }
 
   clearSearch(): void {
     this.searchInput.set('');
+    this.productService.clearSearch();
+    this.searchTerms.next('');
   }
 
   openProduct(product: Product): void {

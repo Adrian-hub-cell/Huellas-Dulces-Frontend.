@@ -1,4 +1,6 @@
 
+
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -194,11 +196,13 @@ import { ThemeService } from '../core/services/theme.service';
         </button>
 
         @if (auth.authenticated()) {
+          <a routerLink="/profile" class="login-button">Mi perfil</a>
           <button class="login-button" type="button" (click)="logout()">
             Cerrar sesión
           </button>
         } @else {
           <a routerLink="/login" class="login-button">Iniciar sesión</a>
+          <a routerLink="/crear-cuenta" class="login-button">Crear cuenta</a>
         }
       </div>
     </header>

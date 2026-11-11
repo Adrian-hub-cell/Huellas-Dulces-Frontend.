@@ -1,7 +1,13 @@
-﻿import { Injectable, computed, inject, signal } from '@angular/core';
+﻿
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+
 import { LoginRequest, LoginResponse } from '../../models/product.model';
+import {
+  CustomerRegisterRequest,
+  CustomerRegisterResponse
+} from '../../models/customer-registration.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -30,6 +36,15 @@ export class AuthService {
           );
         }
       })
+    );
+  }
+
+  registerCustomer(
+    customer: CustomerRegisterRequest
+  ): Observable<CustomerRegisterResponse> {
+    return this.http.post<CustomerRegisterResponse>(
+      '/api/v1/auth/register',
+      customer
     );
   }
 

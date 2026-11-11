@@ -1,0 +1,62 @@
+﻿# Huellas Dulces - Frontend
+# Reglas obligatorias para asistentes de IA
+
+## Contexto del proyecto
+- Proyecto: Huellas Dulces.
+- Frontend desarrollado con Angular 21.
+- Mantener la arquitectura y funcionalidades existentes.
+- No reconstruir la aplicación desde cero.
+
+## Arquitectura
+- core: servicios, guards e interceptores globales.
+- features: funcionalidades organizadas por módulos.
+- shared: componentes compartidos.
+- models: interfaces y modelos de datos.
+
+## Angular
+- Usar componentes standalone.
+- Mantener la configuración Zoneless existente.
+- Utilizar Signals y computed para el estado reactivo.
+- Respetar Angular Router.
+- Usar servicios para centralizar la comunicación con el backend.
+- Evitar duplicar componentes y servicios.
+- Mantener el tipado estricto de TypeScript.
+
+## Autenticación y seguridad
+- Utilizar el servicio de autenticación existente.
+- Mantener el AuthInterceptor para enviar el token JWT.
+- Mantener el ErrorInterceptor para gestionar respuestas HTTP 401.
+- No almacenar contraseñas en el frontend.
+- No exponer tokens ni credenciales.
+- No eliminar guards ni controles de acceso.
+- Respetar las rutas protegidas.
+
+## Comunicación y tiempo real
+- Mantener la comunicación con el backend mediante HTTP.
+- Respetar la configuración STOMP y WebSocket existente.
+- Enviar el token JWT durante la conexión autenticada.
+- Evitar conexiones duplicadas.
+- Gestionar correctamente las desconexiones.
+
+## Formularios y experiencia de usuario
+- Utilizar formularios reactivos cuando corresponda.
+- Validar los datos antes de enviarlos.
+- Mostrar mensajes claros de error y confirmación.
+- Mantener un diseño adaptable a dispositivos.
+- Cuidar la accesibilidad, contraste y legibilidad.
+
+## Calidad y rendimiento
+- Evitar suscripciones innecesarias.
+- Limpiar recursos y conexiones cuando corresponda.
+- Preferir cambios pequeños y verificables.
+- No introducir dependencias sin justificar su necesidad.
+- Ejecutar npm run build después de modificar código.
+- No afirmar que una funcionalidad está terminada sin probarla.
+
+## Protección del trabajo
+- Revisar el contenido actual antes de reemplazar archivos.
+- No borrar componentes, servicios ni estilos existentes sin autorización.
+- No modificar package.json innecesariamente.
+- No publicar archivos .env, credenciales ni respaldos.
+- Explicar los cambios y señalar los archivos afectados.
+- Priorizar la continuidad del proyecto Huellas Dulces.

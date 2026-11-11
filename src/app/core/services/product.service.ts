@@ -1,6 +1,6 @@
-﻿import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, finalize, of, tap } from 'rxjs';
 import { Product, ProductRequest } from '../../models/product.model';
 
 const DEMO_PRODUCTS: Product[] = [
@@ -241,6 +241,12 @@ export class ProductService {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
+  // Caché SWR: conserva resultados y los actualiza desde el servidor.
+  private readonly searchCache = new Map<string, Product[]>();
+
+  readonly searchResults = signal<Product[] | null>(null);
+  readonly searching = signal(false);
+
   readonly categories = computed(() =>
     [...new Set(this.products().map(product => product.category))]
   );
@@ -268,6 +274,46 @@ export class ProductService {
     });
   }
 
+  getCachedSearch(term: string): Product[] | undefined {
+    const normalizedTerm = term.trim().toLocaleLowerCase();
+    return this.searchCache.get(normalizedTerm);
+  }
+
+  searchProducts(term: string): Observable<Product[]> {
+    const normalizedTerm = term.trim().toLocaleLowerCase();
+
+    if (!normalizedTerm) {
+      this.searchResults.set(null);
+      return of(this.products());
+    }
+
+    const cachedProducts = this.searchCache.get(normalizedTerm);
+
+    // Mostrar inmediatamente los resultados guardados.
+    this.searchResults.set(cachedProducts ?? []);
+    this.searching.set(true);
+
+    // Consultar nuevamente el backend para actualizar la caché.
+    return this.http.get<Product[]>('/api/v1/products/search', {
+      params: { q: normalizedTerm }
+    }).pipe(
+      tap(products => {
+        this.searchCache.set(normalizedTerm, products);
+        this.searchResults.set(products);
+      }),
+      catchError(() => {
+        // Si falla el servidor, conservar los resultados en caché.
+        this.searchResults.set(cachedProducts ?? []);
+        return of(cachedProducts ?? []);
+      }),
+      finalize(() => this.searching.set(false))
+    );
+  }
+
+  clearSearch(): void {
+    this.searchResults.set(null);
+  }
+
   getProductById(id: number): Product | undefined {
     return this.products().find(product => product.id === id);
   }
@@ -276,6 +322,7 @@ export class ProductService {
     return this.http.post<Product>('/api/v1/products', request).pipe(
       tap(product => {
         this.productState.update(current => [...current, product]);
+        this.searchCache.clear();
       })
     );
   }

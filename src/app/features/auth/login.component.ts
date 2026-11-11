@@ -1,8 +1,9 @@
-﻿import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { RealtimeService } from '../../core/services/realtime.service';
 
 @Component({
   selector: 'app-login',
@@ -10,6 +11,7 @@ import { NotificationService } from '../../core/services/notification.service';
   template: `
     <section class="form-page login-page">
       <a routerLink="/" class="back-link">← Volver al catálogo</a>
+
       <div class="form-heading">
         <span class="eyebrow">BIENVENIDO DE NUEVO</span>
         <h1>Iniciar sesión</h1>
@@ -42,6 +44,11 @@ import { NotificationService } from '../../core/services/notification.service';
         <button class="primary-button" type="submit" [disabled]="loading()">
           {{ loading() ? 'Ingresando...' : 'Ingresar' }}
         </button>
+
+        <p>
+          ¿No tienes una cuenta?
+          <a routerLink="/crear-cuenta">Crear una cuenta</a>
+        </p>
       </form>
     </section>
   `
@@ -50,6 +57,7 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly notifications = inject(NotificationService);
+  private readonly realtime = inject(RealtimeService);
   private readonly router = inject(Router);
 
   readonly loading = signal(false);
@@ -72,6 +80,7 @@ export class LoginComponent {
     this.auth.login(this.form.getRawValue()).subscribe({
       next: () => {
         this.loading.set(false);
+        this.realtime.connect();
         this.notifications.notify('Sesión iniciada correctamente');
         this.router.navigate(['/']);
       },
