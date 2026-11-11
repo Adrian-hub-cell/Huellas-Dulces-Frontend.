@@ -379,19 +379,23 @@ export class PerformanceComponent implements OnDestroy {
       return;
     }
 
-    const ttfb = entry.responseStart - entry.requestStart;
-
-    let resourceName = entry.name;
+    let resourceName = '';
 
     try {
-      resourceName = new URL(entry.name).pathname;
+      resourceName = new URL(entry.name, window.location.origin).pathname;
     } catch {
-      // Conserva el nombre original si no es una URL válida.
+      return;
     }
+
+    if (!resourceName.startsWith('/api/')) {
+      return;
+    }
+
+    const ttfb = entry.responseStart - entry.requestStart;
 
     this.addMetric({
       name: resourceName,
-      type: entry.initiatorType || 'resource',
+      type: 'API',
       ttfb
     });
   }
