@@ -1,7 +1,19 @@
+
+
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, finalize, of, tap } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import {
+  Observable,
+  catchError,
+  finalize,
+  map,
+  of,
+  tap,
+  throwError
+} from 'rxjs';
 import { Product, ProductRequest } from '../../models/product.model';
+import { OfflineQueueService } from './offline-queue.service';
+import { OfflineSyncService } from './offline-sync.service';
 
 const DEMO_PRODUCTS: Product[] = [
   {
@@ -116,8 +128,6 @@ const DEMO_PRODUCTS: Product[] = [
     category: 'Alimento para perros',
     price: 18500, stock: 10, available: true
   },
-
-  // Nuevos alimentos para perros
   {
     id: 17,
     name: 'Croquetas para perro pequeño',
@@ -139,8 +149,6 @@ const DEMO_PRODUCTS: Product[] = [
     category: 'Alimento para perros',
     price: 39000, stock: 8, available: true
   },
-
-  // Nuevos alimentos para gatos
   {
     id: 20,
     name: 'Alimento para gatitos',
@@ -155,8 +163,6 @@ const DEMO_PRODUCTS: Product[] = [
     category: 'Alimento para gatos',
     price: 34000, stock: 11, available: true
   },
-
-  // Nuevos juguetes para perros
   {
     id: 22,
     name: 'Pelota resistente para perros',
@@ -185,8 +191,6 @@ const DEMO_PRODUCTS: Product[] = [
     category: 'Juguetes',
     price: 23000, stock: 7, available: true
   },
-
-  // Nuevos juguetes para gatos
   {
     id: 26,
     name: 'Ratón de juguete para gatos',
@@ -234,6 +238,8 @@ const DEMO_PRODUCTS: Product[] = [
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private readonly http = inject(HttpClient);
+  private readonly offlineQueue = inject(OfflineQueueService);
+  private readonly offlineSync = inject(OfflineSyncService);
 
   private readonly productState = signal<Product[]>(DEMO_PRODUCTS);
 
@@ -241,7 +247,6 @@ export class ProductService {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
-  // Caché SWR: conserva resultados y los actualiza desde el servidor.
   private readonly searchCache = new Map<string, Product[]>();
 
   readonly searchResults = signal<Product[] | null>(null);
@@ -251,14 +256,24 @@ export class ProductService {
     [...new Set(this.products().map(product => product.category))]
   );
 
+  constructor() {
+    this.offlineSync.syncCompleted$.subscribe(product => {
+      this.productState.update(current =>
+        current.some(item => item.id === product.id)
+          ? current
+          : [...current, product]
+      );
+
+      this.searchCache.clear();
+    });
+  }
+
   loadProducts(): void {
     this.loading.set(true);
     this.error.set(null);
 
     this.http.get<Product[]>('/api/v1/products').subscribe({
       next: products => {
-        // El inventario real del servidor tiene prioridad.
-        // El catálogo de demostración se conserva como alternativa.
         if (products.length > 0) {
           this.productState.set(products);
         }
@@ -289,11 +304,9 @@ export class ProductService {
 
     const cachedProducts = this.searchCache.get(normalizedTerm);
 
-    // Mostrar inmediatamente los resultados guardados.
     this.searchResults.set(cachedProducts ?? []);
     this.searching.set(true);
 
-    // Consultar nuevamente el backend para actualizar la caché.
     return this.http.get<Product[]>('/api/v1/products/search', {
       params: { q: normalizedTerm }
     }).pipe(
@@ -302,7 +315,6 @@ export class ProductService {
         this.searchResults.set(products);
       }),
       catchError(() => {
-        // Si falla el servidor, conservar los resultados en caché.
         this.searchResults.set(cachedProducts ?? []);
         return of(cachedProducts ?? []);
       }),
@@ -318,12 +330,44 @@ export class ProductService {
     return this.products().find(product => product.id === id);
   }
 
-  createProduct(request: ProductRequest): Observable<Product> {
+  createProduct(
+    request: ProductRequest
+  ): Observable<
+    | { status: 'synced'; product: Product }
+    | { status: 'queued' }
+  > {
+    if (
+      typeof navigator !== 'undefined' &&
+      !navigator.onLine
+    ) {
+      return this.queueProduct(request);
+    }
+
     return this.http.post<Product>('/api/v1/products', request).pipe(
       tap(product => {
         this.productState.update(current => [...current, product]);
         this.searchCache.clear();
+      }),
+      map(product => ({ status: 'synced' as const, product })),
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 0) {
+          return this.queueProduct(request);
+        }
+
+        return throwError(() => error);
       })
     );
+  }
+
+  private queueProduct(
+    request: ProductRequest
+  ): Observable<{ status: 'queued' }> {
+    if (!this.offlineQueue.enqueue(request)) {
+      return throwError(
+        () => new Error('No fue posible guardar el producto sin conexión.')
+      );
+    }
+
+    return of({ status: 'queued' as const });
   }
 }

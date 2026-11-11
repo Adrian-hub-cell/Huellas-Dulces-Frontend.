@@ -1,4 +1,5 @@
-﻿import { Component, inject, signal } from '@angular/core';
+﻿
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
@@ -108,9 +109,19 @@ export class ProductRegisterComponent {
     this.errorMessage.set('');
 
     this.products.createProduct(this.form.getRawValue()).subscribe({
-      next: () => {
+      next: result => {
         this.saving.set(false);
-        this.notifications.notify('Producto registrado correctamente');
+
+        if (result.status === 'queued') {
+          this.notifications.notify(
+            'Producto guardado sin conexión. Se sincronizará cuando vuelva internet.'
+          );
+        } else {
+          this.notifications.notify(
+            'Producto registrado correctamente.'
+          );
+        }
+
         this.router.navigate(['/']);
       },
       error: () => {
