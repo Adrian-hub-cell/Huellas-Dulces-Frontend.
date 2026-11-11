@@ -200,22 +200,23 @@ Ejecutar las pruebas con cobertura:
 npm test -- --watch=false --coverage
 ```
 
+
 ### Resultados de pruebas unitarias
 
-- 12 archivos de pruebas aprobados.
-- 139 pruebas aprobadas.
+- 15 archivos de pruebas aprobados.
+- 196 pruebas aprobadas.
 - 0 pruebas fallidas.
 
 ### Cobertura de código
 
-| Indicador | Cobertura |
-|---|---:|
-| Statements | 80.56% |
-| Branches | 79.38% |
-| Functions | 75.79% |
-| Lines | 81.79% |
+| Indicador | Cobertura | Objetivo |
+|---|---:|---:|
+| Statements | 84.82% | 80% |
+| Branches | 89.69% | 80% |
+| Functions | 80.25% | 80% |
+| Lines | 86.66% | 80% |
 
-La cobertura se mantiene como una métrica de mejora continua. Los indicadores de ramas y funciones requieren trabajo adicional para alcanzar el objetivo del 80%.
+Todas las métricas de cobertura superan el objetivo mínimo del 80%.
 
 El reporte HTML se genera en:
 
