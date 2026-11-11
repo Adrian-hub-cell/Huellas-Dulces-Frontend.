@@ -60,3 +60,17 @@
 - No publicar archivos .env, credenciales ni respaldos.
 - Explicar los cambios y señalar los archivos afectados.
 - Priorizar la continuidad del proyecto Huellas Dulces.
+
+## Pruebas automatizadas y TDD
+- Utilizar Vitest para las pruebas unitarias del frontend.
+- Utilizar Angular Testing Library para probar componentes desde la perspectiva del usuario.
+- Utilizar HttpTestingController para verificar solicitudes HTTP.
+- Probar los servicios, componentes, interceptores y estados reactivos con Signals.
+- Utilizar Cypress para validar los flujos críticos end-to-end.
+- Mantener pruebas para autenticación, búsqueda de productos y manejo de errores.
+- Aplicar el ciclo Red-Green-Refactor cuando se desarrollen nuevas funcionalidades.
+- Ejecutar las pruebas después de cada cambio relevante.
+- Revisar los reportes de cobertura HTML y LCOV.
+- No eliminar ni debilitar pruebas para conseguir que la ejecución aparezca aprobada.
+- Buscar una cobertura mínima del 80% en statements, branches, functions y lines.
+- Documentar los resultados reales de las pruebas sin inventar métricas.

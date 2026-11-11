@@ -1,4 +1,4 @@
-# Huellas Dulces
+﻿# Huellas Dulces
 
 Aplicación web para la gestión y consulta de productos de una tienda de mascotas. Desarrollada con Angular 21 y conectada a un backend construido con Spring Boot y Java 25.
 
@@ -150,7 +150,7 @@ Huellas Dulces busca ofrecer una experiencia sencilla, organizada y moderna para
 8. Las operaciones compatibles pendientes se almacenan localmente cuando no hay conexión y se intenta sincronizarlas al recuperarla.
 9. El perfil procesa las imágenes mediante Canvas y WebP antes de enviarlas al backend.
 
-## Prompts complejos de desarrollo
+## Prompts complejos de desarrollo asistido por IA
 
 Los siguientes prompts documentan ejemplos de instrucciones técnicas para apoyar el desarrollo y mantenimiento del proyecto:
 
@@ -173,3 +173,96 @@ Los siguientes prompts documentan ejemplos de instrucciones técnicas para apoya
 ### 5. Funcionamiento offline y rendimiento
 
 "Revisa el funcionamiento offline-first de Huellas Dulces. Implementa una cola local de operaciones pendientes, sincronización al recuperar la conexión y manejo de errores para evitar pérdida o duplicación de datos. Complementa la solución con PerformanceObserver para medir y presentar métricas de rendimiento del frontend y tiempos de respuesta de la API."
+
+## Pruebas automatizadas y calidad
+
+El frontend utiliza Vitest y Cypress para verificar el comportamiento de sus componentes, servicios y flujos principales.
+
+### Pruebas unitarias
+
+Tecnologías utilizadas:
+
+- Vitest 4.1.12.
+- Angular Testing Library.
+- jsdom.
+- HttpTestingController.
+- @vitest/coverage-v8.
+
+Ejecutar las pruebas:
+
+```bash
+npm test
+```
+
+Ejecutar las pruebas con cobertura:
+
+```bash
+npm test -- --watch=false --coverage
+```
+
+### Resultados de pruebas unitarias
+
+- 12 archivos de pruebas aprobados.
+- 139 pruebas aprobadas.
+- 0 pruebas fallidas.
+
+### Cobertura de código
+
+| Indicador | Cobertura |
+|---|---:|
+| Statements | 80.56% |
+| Branches | 79.38% |
+| Functions | 75.79% |
+| Lines | 81.79% |
+
+La cobertura se mantiene como una métrica de mejora continua. Los indicadores de ramas y funciones requieren trabajo adicional para alcanzar el objetivo del 80%.
+
+El reporte HTML se genera en:
+
+```text
+coverage/huellas-dulces-web/index.html
+```
+
+El reporte LCOV se genera en:
+
+```text
+coverage/huellas-dulces-web/lcov.info
+```
+
+### Pruebas end-to-end con Cypress
+
+Se utiliza Cypress 16.3.0 para verificar flujos principales de la aplicación.
+
+Ejecutar las pruebas E2E:
+
+```bash
+npx cypress run
+```
+
+Escenarios automatizados:
+
+1. Inicio de sesión exitoso y almacenamiento del token.
+2. Exploración y búsqueda de productos.
+3. Manejo de errores HTTP 500 durante la búsqueda de productos.
+
+Resultados:
+
+- 3 pruebas E2E aprobadas.
+- 0 pruebas fallidas.
+
+Los escenarios utilizan respuestas HTTP interceptadas para validar los comportamientos del frontend de forma controlada.
+
+El video de ejecución se genera en:
+
+```text
+cypress/videos/huellas-dulces.cy.ts.mp4
+```
+
+### Herramientas de calidad
+
+- Vitest para pruebas unitarias.
+- Angular Testing Library para pruebas de componentes.
+- HttpTestingController para validar solicitudes HTTP.
+- Cypress para pruebas end-to-end.
+- JaCoCo en el backend para medir cobertura de pruebas.
+- LCOV y HTML para consultar los resultados de cobertura del frontend.
