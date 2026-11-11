@@ -150,7 +150,7 @@ Huellas Dulces busca ofrecer una experiencia sencilla, organizada y moderna para
 8. Las operaciones compatibles pendientes se almacenan localmente cuando no hay conexión y se intenta sincronizarlas al recuperarla.
 9. El perfil procesa las imágenes mediante Canvas y WebP antes de enviarlas al backend.
 
-## Prompts complejos de desarrollo asistido por IA
+## Prompts complejos de desarrollo
 
 Los siguientes prompts documentan ejemplos de instrucciones técnicas para apoyar el desarrollo y mantenimiento del proyecto:
 
