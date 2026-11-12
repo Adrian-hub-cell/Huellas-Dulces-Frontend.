@@ -1,4 +1,3 @@
-
 name: CI - Huellas Dulces Frontend
 
 on:
@@ -113,8 +112,8 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           install: false
-          start: npm run start -- --host 0.0.0.0 --port 4200
-          wait-on: 'http://localhost:4200'
+          start: npx ng serve --host 127.0.0.1 --port 4200
+          wait-on: 'http://127.0.0.1:4200'
           wait-on-timeout: 120
           command: npx cypress run --browser electron
 
