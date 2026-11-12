@@ -1,0 +1,17 @@
+.git
+.gitignore
+.github
+.vscode
+.idea
+node_modules
+dist
+.angular
+coverage
+cypress/videos
+cypress/screenshots
+.env
+.env.*
+!.env.example
+*.log
+*.backup*
+.DS_Store

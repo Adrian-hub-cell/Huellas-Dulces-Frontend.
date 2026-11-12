@@ -1,5 +1,4 @@
-
-import { TestBed } from '@angular/core/testing';
+﻿import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const stompMocks = vi.hoisted(() => ({
@@ -88,8 +87,10 @@ describe('RealtimeService', () => {
     expect(stompMocks.clients).toHaveLength(1);
 
     const client = stompMocks.clients[0];
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const expectedBrokerURL = `${protocol}//${window.location.host}/ws`;
 
-    expect(client.config.brokerURL).toBe('ws://localhost:8080/ws');
+    expect(client.config.brokerURL).toBe(expectedBrokerURL);
     expect(client.config.connectHeaders.Authorization).toBe('Bearer jwt-test');
     expect(client.activate).toHaveBeenCalledOnce();
   });

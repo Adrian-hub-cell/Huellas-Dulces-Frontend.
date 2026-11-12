@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+﻿import { Injectable, inject, signal } from '@angular/core';
 import { Client, IMessage } from '@stomp/stompjs';
 import { AuthService } from './auth.service';
 import { NotificationService } from './notification.service';
@@ -21,10 +21,13 @@ export class RealtimeService {
       return;
     }
 
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const brokerURL = `${protocol}//${window.location.host}/ws`;
+
     console.info('[Realtime] Intentando conectar con WebSocket...');
 
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/ws',
+      brokerURL,
       connectHeaders: {
         Authorization: `Bearer ${token}`
       },

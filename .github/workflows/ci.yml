@@ -1,0 +1,128 @@
+name: CI - Huellas Dulces Frontend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Unit tests, coverage and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar pruebas unitarias con cobertura
+        run: npx ng test --watch=false --coverage
+
+      - name: Verificar cobertura minima del 80 por ciento
+        run: |
+          python3 - <<'PY'
+          import sys
+
+          path = "coverage/huellas-dulces-web/lcov.info"
+          totals = {
+              "LINEAS": [0, 0],
+              "FUNCIONES": [0, 0],
+              "RAMAS": [0, 0],
+          }
+
+          try:
+              with open(path, encoding="utf-8") as report:
+                  for line in report:
+                      line = line.strip()
+
+                      if line.startswith("LF:"):
+                          totals["LINEAS"][0] += int(line[3:])
+                      elif line.startswith("LH:"):
+                          totals["LINEAS"][1] += int(line[3:])
+                      elif line.startswith("FNF:"):
+                          totals["FUNCIONES"][0] += int(line[4:])
+                      elif line.startswith("FNH:"):
+                          totals["FUNCIONES"][1] += int(line[4:])
+                      elif line.startswith("BRF:"):
+                          totals["RAMAS"][0] += int(line[4:])
+                      elif line.startswith("BRH:"):
+                          totals["RAMAS"][1] += int(line[4:])
+          except Exception as error:
+              print(f"ERROR al leer cobertura LCOV: {error}")
+              sys.exit(1)
+
+          failed = False
+
+          for name, (total, covered) in totals.items():
+              percentage = covered / total * 100 if total else 0
+              print(f"{name}: {percentage:.2f}% (minimo: 80%)")
+
+              if total == 0 or percentage < 80:
+                  failed = True
+
+          if failed:
+              print("ERROR: La cobertura no cumple el minimo del 80%.")
+              sys.exit(1)
+
+          print("Cobertura aprobada.")
+          PY
+
+      - name: Compilar Angular para produccion
+        run: npm run build
+
+      - name: Guardar reporte de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-report
+          path: coverage/huellas-dulces-web/
+          if-no-files-found: warn
+
+  e2e:
+    name: Cypress E2E
+    runs-on: ubuntu-latest
+    needs: build-test
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar pruebas E2E con Cypress
+        uses: cypress-io/github-action@v6
+        with:
+          install: false
+          start: npm run start -- --host 0.0.0.0 --port 4200
+          wait-on: 'http://localhost:4200'
+          wait-on-timeout: 120
+          command: npx cypress run --browser electron
+
+      - name: Guardar videos y capturas de Cypress
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-cypress-results
+          path: |
+            cypress/videos/
+            cypress/screenshots/
+          if-no-files-found: ignore
