@@ -1,3 +1,4 @@
+ 
 name: CI - Huellas Dulces Frontend
 
 on:
@@ -108,14 +109,42 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Iniciar Angular y comprobar disponibilidad
+        run: |
+          npm start -- --host 0.0.0.0 --port 4200 > angular-start.log 2>&1 &
+          echo $! > angular.pid
+
+          for i in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:4200/ > /dev/null; then
+              echo "Angular esta disponible."
+              exit 0
+            fi
+
+            if ! kill -0 "$(cat angular.pid)" 2>/dev/null; then
+              echo "ERROR: Angular se cerro durante el arranque."
+              cat angular-start.log
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          echo "ERROR: Angular no respondio en 120 segundos."
+          cat angular-start.log
+          exit 1
+
       - name: Ejecutar pruebas E2E con Cypress
         uses: cypress-io/github-action@v6
         with:
           install: false
-          start: npx ng serve --host 127.0.0.1 --port 4200
-          wait-on: 'http://127.0.0.1:4200'
-          wait-on-timeout: 120
           command: npx cypress run --browser electron
+
+      - name: Mostrar registros de Angular
+        if: always()
+        run: |
+          if [ -f angular-start.log ]; then
+            cat angular-start.log
+          fi
 
       - name: Guardar videos y capturas de Cypress
         if: always()
